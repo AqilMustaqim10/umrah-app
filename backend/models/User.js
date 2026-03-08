@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 
 const userSchema = new mongoose.Schema(
   {
@@ -26,7 +27,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: [true, "Please provide a password"],
       minlength: [6, "Password must be at least 6 characters"],
-      select: false, // Never return password in queries by default
+      select: false,
     },
 
     phone: {
@@ -51,7 +52,6 @@ const userSchema = new mongoose.Schema(
       default: "",
     },
 
-    // Password reset fields (used in Phase 4)
     resetPasswordToken: {
       type: String,
       default: undefined,
@@ -63,31 +63,42 @@ const userSchema = new mongoose.Schema(
     },
   },
   {
-    timestamps: true, // Adds createdAt and updatedAt automatically
+    timestamps: true,
   },
 );
 
 // ─── Hash password before saving ──────────────────────────
-// This runs automatically every time a user is saved
 userSchema.pre("save", async function (next) {
-  // Only hash if password was changed (not on profile updates)
   if (!this.isModified("password")) {
     return next();
   }
-
-  // Generate a salt (random string that makes each hash unique)
   const salt = await bcrypt.genSalt(10);
-
-  // Hash the password with the salt
   this.password = await bcrypt.hash(this.password, salt);
-
   next();
 });
 
-// ─── Method to compare passwords at login ─────────────────
-// We add this method to every User document
+// ─── Compare entered password with hashed password ────────
 userSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
+};
+
+// ─── Generate password reset token ────────────────────────
+userSchema.methods.getResetPasswordToken = function () {
+  // Step 1: Generate a random token (this goes in the email link)
+  const resetToken = crypto.randomBytes(32).toString("hex");
+
+  // Step 2: Hash the token before saving to DB
+  // (so even if DB is breached, tokens can't be used)
+  this.resetPasswordToken = crypto
+    .createHash("sha256")
+    .update(resetToken)
+    .digest("hex");
+
+  // Step 3: Set expiry — 10 minutes from now
+  this.resetPasswordExpire = Date.now() + 10 * 60 * 1000;
+
+  // Step 4: Return the UNHASHED token (this goes in the email)
+  return resetToken;
 };
 
 const User = mongoose.model("User", userSchema);
