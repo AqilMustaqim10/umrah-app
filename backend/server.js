@@ -3,6 +3,9 @@ import cors from "cors";
 import dotenv from "dotenv";
 import connectDB from "./config/db.js";
 
+// Import routes
+import authRoutes from "./routes/authRoutes.js";
+
 // Load environment variables FIRST
 dotenv.config();
 
@@ -13,13 +16,8 @@ connectDB();
 const app = express();
 
 // ─── Middleware ────────────────────────────────────────────
-// Parse incoming JSON requests
 app.use(express.json());
-
-// Parse URL-encoded form data
 app.use(express.urlencoded({ extended: true }));
-
-// Enable CORS — allows frontend to call this backend
 app.use(
   cors({
     origin: process.env.FRONTEND_URL || "http://localhost:5173",
@@ -29,7 +27,7 @@ app.use(
 
 // ─── Routes ───────────────────────────────────────────────
 
-// Health check — test that server is running
+// Health check
 app.get("/api/health", (req, res) => {
   res.status(200).json({
     success: true,
@@ -39,7 +37,10 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-// 404 handler — for unknown routes
+// Auth routes
+app.use("/api/auth", authRoutes);
+
+// 404 handler
 app.use((req, res) => {
   res.status(404).json({
     success: false,
