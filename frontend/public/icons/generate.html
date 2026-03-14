@@ -1,0 +1,44 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Icon Generator</title>
+  </head>
+  <body>
+    <p>Right-click each canvas and save as PNG with the shown filename.</p>
+
+    <script>
+      const sizes = [72, 96, 128, 144, 152, 192, 384, 512];
+
+      sizes.forEach((size) => {
+        const canvas = document.createElement("canvas");
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext("2d");
+
+        // Background
+        ctx.fillStyle = "#1B4332";
+        ctx.beginPath();
+        ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Kaaba
+        const s = size / 512;
+        ctx.fillStyle = "#D4A017";
+        ctx.fillRect(156 * s, 180 * s, 200 * s, 200 * s);
+
+        // Door
+        ctx.fillStyle = "#1B4332";
+        ctx.fillRect(226 * s, 280 * s, 60 * s, 100 * s);
+
+        // Belt
+        ctx.fillStyle = "#D4A017";
+        ctx.fillRect(156 * s, 234 * s, 200 * s, 4 * s);
+
+        const label = document.createElement("p");
+        label.textContent = `icon-${size}x${size}.png`;
+        document.body.appendChild(label);
+        document.body.appendChild(canvas);
+      });
+    </script>
+  </body>
+</html>

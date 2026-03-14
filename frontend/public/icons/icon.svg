@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background circle -->
+  <circle cx="256" cy="256" r="256" fill="#1B4332"/>
+
+  <!-- Kaaba shape -->
+  <rect x="156" y="180" width="200" height="200"
+        rx="8" fill="#D4A017"/>
+
+  <!-- Kaaba door -->
+  <rect x="226" y="280" width="60" height="100"
+        rx="4" fill="#1B4332"/>
+
+  <!-- Kaaba cloth (Kiswa) line -->
+  <rect x="156" y="230" width="200" height="12"
+        rx="2" fill="#40916C" opacity="0.8"/>
+
+  <!-- Gold band on cloth -->
+  <rect x="156" y="236" width="200" height="4"
+        rx="1" fill="#D4A017" opacity="0.9"/>
+
+  <!-- Stars above -->
+  <circle cx="200" cy="150" r="8" fill="#D4A017" opacity="0.9"/>
+  <circle cx="256" cy="130" r="10" fill="#D4A017"/>
+  <circle cx="312" cy="150" r="8" fill="#D4A017" opacity="0.9"/>
+
+  <!-- Crescent moon -->
+  <path d="M 256 100 
+           A 40 40 0 1 1 296 140
+           A 30 30 0 1 0 256 100 Z"
+        fill="#D4A017" opacity="0.95"/>
+</svg>
