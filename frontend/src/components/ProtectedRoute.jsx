@@ -1,12 +1,9 @@
 import { Navigate } from "react-router-dom";
-import { useAuth } from "../hooks/useAuth";
+import useAuth from "../hooks/useAuth";
 
-// Wraps any page that requires login
-// If not logged in → redirect to /login
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
 
-  // While checking localStorage, show nothing
   if (loading) {
     return (
       <div
@@ -23,12 +20,10 @@ const ProtectedRoute = ({ children }) => {
     );
   }
 
-  // If not authenticated, redirect to login
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
-  // If authenticated, render the page
   return children;
 };
 

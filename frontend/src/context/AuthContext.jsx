@@ -1,69 +1,38 @@
-import { useState } from "react";
-import API from "../api/axios";
-import { AuthContext } from "../hooks/useAuth";
+import { createContext, useState } from "react";
 
-// ─────────────────────────────────────────────────────────
-// AuthProvider — wraps the whole app
-// Provides auth state to every component
-// ─────────────────────────────────────────────────────────
+const AuthContext = createContext(null);
+
 export const AuthProvider = ({ children }) => {
+  // ── Initialize directly from localStorage ──────────────
+  // This avoids calling setState inside useEffect
   const [user, setUser] = useState(() => {
     const savedUser = localStorage.getItem("umrah_user");
     return savedUser ? JSON.parse(savedUser) : null;
   });
 
   const [token, setToken] = useState(() => {
-    return localStorage.getItem("umrah_token");
+    return localStorage.getItem("umrah_token") || null;
   });
 
-  const [loading, setLoading] = useState(false);
-
-  // ── Login function ─────────────────────────────────────
-  const login = async (email, password) => {
-    try {
-      setLoading(true);
-
-      const res = await API.post("/auth/login", {
-        email,
-        password,
-      });
-
-      const { user, token } = res.data;
-
-      setUser(user);
-      setToken(token);
-
-      localStorage.setItem("umrah_token", token);
-      localStorage.setItem("umrah_user", JSON.stringify(user));
-
-      return { success: true };
-    } catch (error) {
-      console.error("Login error:", error);
-      return {
-        success: false,
-        message: error.response?.data?.message || "Login failed",
-      };
-    } finally {
-      setLoading(false);
-    }
+  const login = (userData, tokenData) => {
+    setUser(userData);
+    setToken(tokenData);
+    localStorage.setItem("umrah_token", tokenData);
+    localStorage.setItem("umrah_user", JSON.stringify(userData));
   };
 
-  // ── Logout function ────────────────────────────────────
   const logout = () => {
     setUser(null);
     setToken(null);
-
     localStorage.removeItem("umrah_token");
     localStorage.removeItem("umrah_user");
   };
 
-  // ── Update user data (for profile edits) ──────────────
   const updateUser = (updatedUser) => {
     setUser(updatedUser);
     localStorage.setItem("umrah_user", JSON.stringify(updatedUser));
   };
 
-  // ── Check if user is logged in ─────────────────────────
   const isAuthenticated = !!token;
 
   return (
@@ -71,7 +40,7 @@ export const AuthProvider = ({ children }) => {
       value={{
         user,
         token,
-        loading,
+        loading: false,
         isAuthenticated,
         login,
         logout,
@@ -82,3 +51,5 @@ export const AuthProvider = ({ children }) => {
     </AuthContext.Provider>
   );
 };
+
+export default AuthContext;

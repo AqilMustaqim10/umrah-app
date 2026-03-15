@@ -1,4 +1,4 @@
-import { useAuth } from "../hooks/useAuth";
+import useAuth from "../hooks/useAuth";
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
@@ -27,4 +27,5 @@ const Dashboard = () => {
     </div>
   );
 };
+
 export default Dashboard;
