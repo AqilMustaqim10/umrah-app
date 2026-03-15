@@ -5,14 +5,11 @@ import connectDB from "./config/db.js";
 
 // Import routes
 import authRoutes from "./routes/authRoutes.js";
+import checklistRoutes from "./routes/checklistRoutes.js";
 
-// Load environment variables FIRST
 dotenv.config();
-
-// Connect to MongoDB
 connectDB();
 
-// Create Express app
 const app = express();
 
 // ─── Middleware ────────────────────────────────────────────
@@ -26,8 +23,6 @@ app.use(
 );
 
 // ─── Routes ───────────────────────────────────────────────
-
-// Health check
 app.get("/api/health", (req, res) => {
   res.status(200).json({
     success: true,
@@ -37,10 +32,10 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-// Auth routes
 app.use("/api/auth", authRoutes);
+app.use("/api/checklist", checklistRoutes);
 
-// 404 handler
+// ─── 404 handler ──────────────────────────────────────────
 app.use((req, res) => {
   res.status(404).json({
     success: false,
@@ -48,7 +43,7 @@ app.use((req, res) => {
   });
 });
 
-// Global error handler
+// ─── Global error handler ─────────────────────────────────
 app.use((err, req, res, next) => {
   console.error("🔥 Error:", err.message);
   res.status(err.status || 500).json({
@@ -59,7 +54,6 @@ app.use((err, req, res, next) => {
 
 // ─── Start Server ──────────────────────────────────────────
 const PORT = process.env.PORT || 5000;
-
 app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
   console.log(`📡 Health check: http://localhost:${PORT}/api/health`);
