@@ -7,6 +7,8 @@ import toast from "react-hot-toast";
 import API from "../api/axios";
 import useAuth from "../hooks/useAuth";
 import MainLayout from "../components/layout/MainLayout";
+import { ProfileSkeleton } from "../components/Skeleton";
+import PageTransition from "../components/PageTransition";
 
 // ── Format date for display ────────────────────────────────
 const formatDate = (dateString) => {
@@ -106,6 +108,7 @@ const Profile = () => {
   const navigate = useNavigate();
   const { user, logout, updateUser } = useAuth();
 
+  const [pageLoading, setPageLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
@@ -155,6 +158,8 @@ const Profile = () => {
         }
       } catch {
         // Silently fail — progress is non-critical
+      } finally {
+        setPageLoading(false);
       }
     };
     fetchProgress();
@@ -230,480 +235,499 @@ const Profile = () => {
     outline: "none",
   });
 
+  if (pageLoading) {
+    return (
+      <MainLayout>
+        <ProfileSkeleton />
+      </MainLayout>
+    );
+  }
+
   return (
-    <MainLayout>
-      <div className="space-y-5" style={{ paddingBottom: "6rem" }}>
-        {/* ── Profile hero ────────────────────────────── */}
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col items-center pt-4 pb-2"
-        >
+    <PageTransition>
+      <MainLayout>
+        <div className="space-y-5" style={{ paddingBottom: "6rem" }}>
+          {/* ── Profile hero ────────────────────────────── */}
           <motion.div
-            whileHover={{ scale: 1.05 }}
-            transition={{ type: "spring", stiffness: 300 }}
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col items-center pt-4 pb-2"
           >
-            <Avatar name={user?.name} size="lg" />
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              transition={{ type: "spring", stiffness: 300 }}
+            >
+              <Avatar name={user?.name} size="lg" />
+            </motion.div>
+
+            <h1 className="text-xl font-bold mt-4" style={{ color: "#1B4332" }}>
+              {user?.name}
+            </h1>
+            <p className="text-sm mt-0.5" style={{ color: "#6B7280" }}>
+              {user?.email}
+            </p>
+            <p
+              className="text-xs mt-1 px-3 py-1 rounded-full"
+              style={{
+                backgroundColor: "#F0FDF4",
+                color: "#40916C",
+              }}
+            >
+              Member since{" "}
+              {user?.createdAt
+                ? new Date(user.createdAt).toLocaleDateString("en-MY", {
+                    month: "long",
+                    year: "numeric",
+                  })
+                : "recently"}
+            </p>
           </motion.div>
 
-          <h1 className="text-xl font-bold mt-4" style={{ color: "#1B4332" }}>
-            {user?.name}
-          </h1>
-          <p className="text-sm mt-0.5" style={{ color: "#6B7280" }}>
-            {user?.email}
-          </p>
-          <p
-            className="text-xs mt-1 px-3 py-1 rounded-full"
+          {/* ── Account details card ─────────────────────── */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="rounded-2xl overflow-hidden shadow-sm"
             style={{
-              backgroundColor: "#F0FDF4",
-              color: "#40916C",
+              backgroundColor: "#ffffff",
+              border: "1px solid rgba(27,67,50,0.07)",
             }}
           >
-            Member since{" "}
-            {user?.createdAt
-              ? new Date(user.createdAt).toLocaleDateString("en-MY", {
-                  month: "long",
-                  year: "numeric",
-                })
-              : "recently"}
-          </p>
-        </motion.div>
-
-        {/* ── Account details card ─────────────────────── */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="rounded-2xl overflow-hidden shadow-sm"
-          style={{
-            backgroundColor: "#ffffff",
-            border: "1px solid rgba(27,67,50,0.07)",
-          }}
-        >
-          {/* Card header */}
-          <div
-            className="flex items-center justify-between
-                       px-5 py-4"
-            style={{ borderBottom: "1px solid #F3F4F6" }}
-          >
-            <div className="flex items-center gap-2">
-              <span className="text-lg">📋</span>
-              <span className="font-bold text-sm" style={{ color: "#1B4332" }}>
-                Account Details
-              </span>
-            </div>
-
-            {!isEditing && (
-              <button
-                onClick={startEditing}
-                className="flex items-center gap-1.5 px-3 py-1.5
-                           rounded-xl text-xs font-semibold
-                           transition-all"
-                style={{
-                  backgroundColor: "#F0FDF4",
-                  color: "#1B4332",
-                }}
-              >
-                ✏️ Edit
-              </button>
-            )}
-          </div>
-
-          {/* ── View mode ─────────────────────────────── */}
-          <AnimatePresence mode="wait">
-            {!isEditing ? (
-              <motion.div
-                key="view"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="px-5 py-2"
-              >
-                <InfoRow
-                  icon="👤"
-                  label="Full Name"
-                  value={user?.name}
-                  placeholder="Not set"
-                />
-                <InfoRow
-                  icon="✉️"
-                  label="Email"
-                  value={user?.email}
-                  placeholder="Not set"
-                />
-                <InfoRow
-                  icon="📱"
-                  label="Phone"
-                  value={user?.phone}
-                  placeholder="Tap Edit to add"
-                />
-                <InfoRow
-                  icon="🌍"
-                  label="Country"
-                  value={user?.country}
-                  placeholder="Tap Edit to add"
-                />
-                <InfoRow
-                  icon="📅"
-                  label="Umrah Date"
-                  value={formatDate(user?.umrahDate)}
-                  placeholder="Tap Edit to set"
-                />
-              </motion.div>
-            ) : (
-              // ── Edit mode ────────────────────────────
-              <motion.div
-                key="edit"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="p-5"
-              >
-                <form onSubmit={handleProfileSubmit(onProfileSubmit)}>
-                  {/* Name */}
-                  <div className="mb-4">
-                    <label
-                      className="block text-xs font-semibold mb-1.5"
-                      style={{ color: "#374151" }}
-                    >
-                      Full Name
-                    </label>
-                    <input
-                      style={inputStyle(profileErrors.name)}
-                      placeholder="Your full name"
-                      {...registerProfile("name", {
-                        required: "Name is required",
-                        minLength: {
-                          value: 2,
-                          message: "Name too short",
-                        },
-                      })}
-                    />
-                    {profileErrors.name && (
-                      <p className="text-xs mt-1" style={{ color: "#EF4444" }}>
-                        ⚠️ {profileErrors.name.message}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Phone */}
-                  <div className="mb-4">
-                    <label
-                      className="block text-xs font-semibold mb-1.5"
-                      style={{ color: "#374151" }}
-                    >
-                      Phone Number
-                    </label>
-                    <input
-                      style={inputStyle(false)}
-                      placeholder="+60123456789"
-                      {...registerProfile("phone")}
-                    />
-                  </div>
-
-                  {/* Country */}
-                  <div className="mb-4">
-                    <label
-                      className="block text-xs font-semibold mb-1.5"
-                      style={{ color: "#374151" }}
-                    >
-                      Country
-                    </label>
-                    <input
-                      style={inputStyle(false)}
-                      placeholder="Malaysia"
-                      {...registerProfile("country")}
-                    />
-                  </div>
-
-                  {/* Umrah Date */}
-                  <div className="mb-6">
-                    <label
-                      className="block text-xs font-semibold mb-1.5"
-                      style={{ color: "#374151" }}
-                    >
-                      📅 Umrah Date (optional)
-                    </label>
-                    <input
-                      type="date"
-                      style={inputStyle(false)}
-                      {...registerProfile("umrahDate")}
-                    />
-                    <p className="text-xs mt-1" style={{ color: "#9CA3AF" }}>
-                      This shows the countdown on your Dashboard
-                    </p>
-                  </div>
-
-                  {/* Buttons */}
-                  <div className="flex gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setIsEditing(false)}
-                      className="flex-1 py-3 rounded-xl text-sm
-                                 font-semibold border transition-all"
-                      style={{
-                        borderColor: "#E5E7EB",
-                        color: "#6B7280",
-                        backgroundColor: "transparent",
-                      }}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={savingProfile}
-                      className="flex-1 py-3 rounded-xl text-sm
-                                 font-semibold text-white transition-all"
-                      style={{
-                        background: savingProfile
-                          ? "#9CA3AF"
-                          : "linear-gradient(135deg,#1B4332,#40916C)",
-                      }}
-                    >
-                      {savingProfile ? "Saving..." : "Save Changes"}
-                    </button>
-                  </div>
-                </form>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.div>
-
-        {/* ── Progress card ────────────────────────────── */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="rounded-2xl p-5 shadow-sm"
-          style={{
-            backgroundColor: "#ffffff",
-            border: "1px solid rgba(27,67,50,0.07)",
-          }}
-        >
-          <div className="flex items-center gap-2 mb-4">
-            <span className="text-lg">📊</span>
-            <span className="font-bold text-sm" style={{ color: "#1B4332" }}>
-              My Progress
-            </span>
-          </div>
-
-          <MiniProgress
-            label="Umrah Steps"
-            icon="🕋"
-            completed={umrahProgress.completed}
-            total={umrahProgress.total}
-            color="#1B4332"
-          />
-          <MiniProgress
-            label="Packing List"
-            icon="🎒"
-            completed={packingProgress.completed}
-            total={packingProgress.total}
-            color="#92400E"
-          />
-        </motion.div>
-
-        {/* ── Change password section ──────────────────── */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="rounded-2xl overflow-hidden shadow-sm"
-          style={{
-            backgroundColor: "#ffffff",
-            border: "1px solid rgba(27,67,50,0.07)",
-          }}
-        >
-          {/* Toggle header */}
-          <button
-            onClick={() => {
-              setShowPasswordSection(!showPasswordSection);
-              resetPassword();
-            }}
-            className="w-full flex items-center justify-between
-                       px-5 py-4 transition-colors"
-          >
-            <div className="flex items-center gap-2">
-              <span className="text-lg">🔐</span>
-              <span className="font-bold text-sm" style={{ color: "#1B4332" }}>
-                Change Password
-              </span>
-            </div>
-            <motion.span
-              animate={{ rotate: showPasswordSection ? 180 : 0 }}
-              transition={{ duration: 0.2 }}
-              style={{ color: "#9CA3AF" }}
+            {/* Card header */}
+            <div
+              className="flex items-center justify-between
+                         px-5 py-4"
+              style={{ borderBottom: "1px solid #F3F4F6" }}
             >
-              ▼
-            </motion.span>
-          </button>
-
-          {/* Password form */}
-          <AnimatePresence>
-            {showPasswordSection && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.25 }}
-              >
-                <div
-                  className="px-5 pb-5"
-                  style={{ borderTop: "1px solid #F3F4F6" }}
+              <div className="flex items-center gap-2">
+                <span className="text-lg">📋</span>
+                <span
+                  className="font-bold text-sm"
+                  style={{ color: "#1B4332" }}
                 >
-                  <form
-                    onSubmit={handlePasswordSubmit(onPasswordSubmit)}
-                    className="pt-4 space-y-4"
-                  >
-                    {/* Current password */}
-                    <div>
-                      <label
-                        className="block text-xs font-semibold mb-1.5"
-                        style={{ color: "#374151" }}
-                      >
-                        Current Password
-                      </label>
-                      <input
-                        type="password"
-                        style={inputStyle(passwordErrors.currentPassword)}
-                        placeholder="Enter current password"
-                        {...registerPassword("currentPassword", {
-                          required: "Current password is required",
-                        })}
-                      />
-                      {passwordErrors.currentPassword && (
-                        <p
-                          className="text-xs mt-1"
-                          style={{ color: "#EF4444" }}
-                        >
-                          ⚠️ {passwordErrors.currentPassword.message}
-                        </p>
-                      )}
-                    </div>
+                  Account Details
+                </span>
+              </div>
 
-                    {/* New password */}
-                    <div>
+              {!isEditing && (
+                <button
+                  onClick={startEditing}
+                  className="flex items-center gap-1.5 px-3 py-1.5
+                             rounded-xl text-xs font-semibold
+                             transition-all"
+                  style={{
+                    backgroundColor: "#F0FDF4",
+                    color: "#1B4332",
+                  }}
+                >
+                  ✏️ Edit
+                </button>
+              )}
+            </div>
+
+            {/* ── View mode ─────────────────────────────── */}
+            <AnimatePresence mode="wait">
+              {!isEditing ? (
+                <motion.div
+                  key="view"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="px-5 py-2"
+                >
+                  <InfoRow
+                    icon="👤"
+                    label="Full Name"
+                    value={user?.name}
+                    placeholder="Not set"
+                  />
+                  <InfoRow
+                    icon="✉️"
+                    label="Email"
+                    value={user?.email}
+                    placeholder="Not set"
+                  />
+                  <InfoRow
+                    icon="📱"
+                    label="Phone"
+                    value={user?.phone}
+                    placeholder="Tap Edit to add"
+                  />
+                  <InfoRow
+                    icon="🌍"
+                    label="Country"
+                    value={user?.country}
+                    placeholder="Tap Edit to add"
+                  />
+                  <InfoRow
+                    icon="📅"
+                    label="Umrah Date"
+                    value={formatDate(user?.umrahDate)}
+                    placeholder="Tap Edit to set"
+                  />
+                </motion.div>
+              ) : (
+                // ── Edit mode ────────────────────────────
+                <motion.div
+                  key="edit"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="p-5"
+                >
+                  <form onSubmit={handleProfileSubmit(onProfileSubmit)}>
+                    {/* Name */}
+                    <div className="mb-4">
                       <label
                         className="block text-xs font-semibold mb-1.5"
                         style={{ color: "#374151" }}
                       >
-                        New Password
+                        Full Name
                       </label>
                       <input
-                        type="password"
-                        style={inputStyle(passwordErrors.newPassword)}
-                        placeholder="Minimum 6 characters"
-                        {...registerPassword("newPassword", {
-                          required: "New password is required",
+                        style={inputStyle(profileErrors.name)}
+                        placeholder="Your full name"
+                        {...registerProfile("name", {
+                          required: "Name is required",
                           minLength: {
-                            value: 6,
-                            message: "At least 6 characters",
+                            value: 2,
+                            message: "Name too short",
                           },
                         })}
                       />
-                      {passwordErrors.newPassword && (
+                      {profileErrors.name && (
                         <p
                           className="text-xs mt-1"
                           style={{ color: "#EF4444" }}
                         >
-                          ⚠️ {passwordErrors.newPassword.message}
+                          ⚠️ {profileErrors.name.message}
                         </p>
                       )}
                     </div>
 
-                    {/* Confirm new password */}
-                    <div>
+                    {/* Phone */}
+                    <div className="mb-4">
                       <label
                         className="block text-xs font-semibold mb-1.5"
                         style={{ color: "#374151" }}
                       >
-                        Confirm New Password
+                        Phone Number
                       </label>
                       <input
-                        type="password"
-                        style={inputStyle(passwordErrors.confirmPassword)}
-                        placeholder="Re-enter new password"
-                        {...registerPassword("confirmPassword", {
-                          required: "Please confirm password",
-                          validate: (value) =>
-                            value === newPassword || "Passwords do not match",
-                        })}
+                        style={inputStyle(false)}
+                        placeholder="+60123456789"
+                        {...registerProfile("phone")}
                       />
-                      {passwordErrors.confirmPassword && (
-                        <p
-                          className="text-xs mt-1"
-                          style={{ color: "#EF4444" }}
-                        >
-                          ⚠️ {passwordErrors.confirmPassword.message}
-                        </p>
-                      )}
                     </div>
 
-                    <button
-                      type="submit"
-                      disabled={changingPassword}
-                      className="w-full py-3 rounded-xl text-sm
-                                 font-semibold text-white transition-all"
-                      style={{
-                        background: changingPassword
-                          ? "#9CA3AF"
-                          : "linear-gradient(135deg,#1B4332,#40916C)",
-                      }}
-                    >
-                      {changingPassword ? "Changing..." : "Change Password"}
-                    </button>
+                    {/* Country */}
+                    <div className="mb-4">
+                      <label
+                        className="block text-xs font-semibold mb-1.5"
+                        style={{ color: "#374151" }}
+                      >
+                        Country
+                      </label>
+                      <input
+                        style={inputStyle(false)}
+                        placeholder="Malaysia"
+                        {...registerProfile("country")}
+                      />
+                    </div>
+
+                    {/* Umrah Date */}
+                    <div className="mb-6">
+                      <label
+                        className="block text-xs font-semibold mb-1.5"
+                        style={{ color: "#374151" }}
+                      >
+                        📅 Umrah Date (optional)
+                      </label>
+                      <input
+                        type="date"
+                        style={inputStyle(false)}
+                        {...registerProfile("umrahDate")}
+                      />
+                      <p className="text-xs mt-1" style={{ color: "#9CA3AF" }}>
+                        This shows the countdown on your Dashboard
+                      </p>
+                    </div>
+
+                    {/* Buttons */}
+                    <div className="flex gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setIsEditing(false)}
+                        className="flex-1 py-3 rounded-xl text-sm
+                                   font-semibold border transition-all"
+                        style={{
+                          borderColor: "#E5E7EB",
+                          color: "#6B7280",
+                          backgroundColor: "transparent",
+                        }}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={savingProfile}
+                        className="flex-1 py-3 rounded-xl text-sm
+                                   font-semibold text-white transition-all"
+                        style={{
+                          background: savingProfile
+                            ? "#9CA3AF"
+                            : "linear-gradient(135deg,#1B4332,#40916C)",
+                        }}
+                      >
+                        {savingProfile ? "Saving..." : "Save Changes"}
+                      </button>
+                    </div>
                   </form>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
 
-        {/* ── App info card ────────────────────────────── */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="rounded-2xl p-5 text-center"
-          style={{
-            background: "linear-gradient(135deg, #F0FDF4, #ECFDF5)",
-            border: "1px solid rgba(27,67,50,0.1)",
-          }}
-        >
-          <div className="text-4xl mb-2">🕋</div>
-          <p className="font-bold text-sm" style={{ color: "#1B4332" }}>
-            Umrah Companion
-          </p>
-          <p className="text-xs mt-1" style={{ color: "#40916C" }}>
-            May Allah accept your Umrah. Ameen 🤲
-          </p>
-          <p className="text-xs mt-2" style={{ color: "#9CA3AF" }}>
-            Version 1.0.0
-          </p>
-        </motion.div>
-
-        {/* ── Logout button ────────────────────────────── */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-        >
-          <button
-            onClick={handleLogout}
-            className="w-full py-4 rounded-2xl font-bold text-sm
-                       transition-all flex items-center
-                       justify-center gap-2"
+          {/* ── Progress card ────────────────────────────── */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="rounded-2xl p-5 shadow-sm"
             style={{
-              backgroundColor: "#FEF2F2",
-              color: "#B91C1C",
-              border: "1.5px solid #FECACA",
+              backgroundColor: "#ffffff",
+              border: "1px solid rgba(27,67,50,0.07)",
             }}
           >
-            🚪 Sign Out
-          </button>
-        </motion.div>
-      </div>
-    </MainLayout>
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-lg">📊</span>
+              <span className="font-bold text-sm" style={{ color: "#1B4332" }}>
+                My Progress
+              </span>
+            </div>
+
+            <MiniProgress
+              label="Umrah Steps"
+              icon="🕋"
+              completed={umrahProgress.completed}
+              total={umrahProgress.total}
+              color="#1B4332"
+            />
+            <MiniProgress
+              label="Packing List"
+              icon="🎒"
+              completed={packingProgress.completed}
+              total={packingProgress.total}
+              color="#92400E"
+            />
+          </motion.div>
+
+          {/* ── Change password section ──────────────────── */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="rounded-2xl overflow-hidden shadow-sm"
+            style={{
+              backgroundColor: "#ffffff",
+              border: "1px solid rgba(27,67,50,0.07)",
+            }}
+          >
+            {/* Toggle header */}
+            <button
+              onClick={() => {
+                setShowPasswordSection(!showPasswordSection);
+                resetPassword();
+              }}
+              className="w-full flex items-center justify-between
+                         px-5 py-4 transition-colors"
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-lg">🔐</span>
+                <span
+                  className="font-bold text-sm"
+                  style={{ color: "#1B4332" }}
+                >
+                  Change Password
+                </span>
+              </div>
+              <motion.span
+                animate={{ rotate: showPasswordSection ? 180 : 0 }}
+                transition={{ duration: 0.2 }}
+                style={{ color: "#9CA3AF" }}
+              >
+                ▼
+              </motion.span>
+            </button>
+
+            {/* Password form */}
+            <AnimatePresence>
+              {showPasswordSection && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.25 }}
+                >
+                  <div
+                    className="px-5 pb-5"
+                    style={{ borderTop: "1px solid #F3F4F6" }}
+                  >
+                    <form
+                      onSubmit={handlePasswordSubmit(onPasswordSubmit)}
+                      className="pt-4 space-y-4"
+                    >
+                      {/* Current password */}
+                      <div>
+                        <label
+                          className="block text-xs font-semibold mb-1.5"
+                          style={{ color: "#374151" }}
+                        >
+                          Current Password
+                        </label>
+                        <input
+                          type="password"
+                          style={inputStyle(passwordErrors.currentPassword)}
+                          placeholder="Enter current password"
+                          {...registerPassword("currentPassword", {
+                            required: "Current password is required",
+                          })}
+                        />
+                        {passwordErrors.currentPassword && (
+                          <p
+                            className="text-xs mt-1"
+                            style={{ color: "#EF4444" }}
+                          >
+                            ⚠️ {passwordErrors.currentPassword.message}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* New password */}
+                      <div>
+                        <label
+                          className="block text-xs font-semibold mb-1.5"
+                          style={{ color: "#374151" }}
+                        >
+                          New Password
+                        </label>
+                        <input
+                          type="password"
+                          style={inputStyle(passwordErrors.newPassword)}
+                          placeholder="Minimum 6 characters"
+                          {...registerPassword("newPassword", {
+                            required: "New password is required",
+                            minLength: {
+                              value: 6,
+                              message: "At least 6 characters",
+                            },
+                          })}
+                        />
+                        {passwordErrors.newPassword && (
+                          <p
+                            className="text-xs mt-1"
+                            style={{ color: "#EF4444" }}
+                          >
+                            ⚠️ {passwordErrors.newPassword.message}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Confirm new password */}
+                      <div>
+                        <label
+                          className="block text-xs font-semibold mb-1.5"
+                          style={{ color: "#374151" }}
+                        >
+                          Confirm New Password
+                        </label>
+                        <input
+                          type="password"
+                          style={inputStyle(passwordErrors.confirmPassword)}
+                          placeholder="Re-enter new password"
+                          {...registerPassword("confirmPassword", {
+                            required: "Please confirm password",
+                            validate: (value) =>
+                              value === newPassword || "Passwords do not match",
+                          })}
+                        />
+                        {passwordErrors.confirmPassword && (
+                          <p
+                            className="text-xs mt-1"
+                            style={{ color: "#EF4444" }}
+                          >
+                            ⚠️ {passwordErrors.confirmPassword.message}
+                          </p>
+                        )}
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={changingPassword}
+                        className="w-full py-3 rounded-xl text-sm
+                                   font-semibold text-white transition-all"
+                        style={{
+                          background: changingPassword
+                            ? "#9CA3AF"
+                            : "linear-gradient(135deg,#1B4332,#40916C)",
+                        }}
+                      >
+                        {changingPassword ? "Changing..." : "Change Password"}
+                      </button>
+                    </form>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
+
+          {/* ── App info card ────────────────────────────── */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="rounded-2xl p-5 text-center"
+            style={{
+              background: "linear-gradient(135deg, #F0FDF4, #ECFDF5)",
+              border: "1px solid rgba(27,67,50,0.1)",
+            }}
+          >
+            <div className="text-4xl mb-2">🕋</div>
+            <p className="font-bold text-sm" style={{ color: "#1B4332" }}>
+              Umrah Companion
+            </p>
+            <p className="text-xs mt-1" style={{ color: "#40916C" }}>
+              May Allah accept your Umrah. Ameen 🤲
+            </p>
+            <p className="text-xs mt-2" style={{ color: "#9CA3AF" }}>
+              Version 1.0.0
+            </p>
+          </motion.div>
+
+          {/* ── Logout button ────────────────────────────── */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+          >
+            <button
+              onClick={handleLogout}
+              className="w-full py-4 rounded-2xl font-bold text-sm
+                         transition-all flex items-center
+                         justify-center gap-2"
+              style={{
+                backgroundColor: "#FEF2F2",
+                color: "#B91C1C",
+                border: "1.5px solid #FECACA",
+              }}
+            >
+              🚪 Sign Out
+            </button>
+          </motion.div>
+        </div>
+      </MainLayout>
+    </PageTransition>
   );
 };
 

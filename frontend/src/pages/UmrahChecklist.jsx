@@ -4,6 +4,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
 import API from "../api/axios";
 import MainLayout from "../components/layout/MainLayout";
+import { ChecklistSkeleton } from "../components/Skeleton";
+import PageTransition from "../components/PageTransition";
 
 // ── Single checklist item component ───────────────────────
 const ChecklistItem = ({ item, onToggle, index }) => {
@@ -124,7 +126,6 @@ const UmrahChecklist = () => {
 
   // ── Toggle item ──────────────────────────────────────────
   const handleToggle = async (itemId) => {
-    // Optimistic update — update UI immediately
     setItems((prev) =>
       prev.map((item) =>
         item.id === itemId ? { ...item, completed: !item.completed } : item,
@@ -134,7 +135,6 @@ const UmrahChecklist = () => {
     try {
       await API.patch(`/checklist/umrah/${itemId}`);
     } catch {
-      // Revert on error
       setItems((prev) =>
         prev.map((item) =>
           item.id === itemId ? { ...item, completed: !item.completed } : item,
@@ -167,117 +167,112 @@ const UmrahChecklist = () => {
   const completed = items.filter((i) => i.completed).length;
   const total = items.length;
   const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
-
-  // ── All done check ───────────────────────────────────────
   const allDone = completed === total && total > 0;
 
+  // Loading State
+  if (loading) {
+    return (
+      <MainLayout>
+        <ChecklistSkeleton />
+      </MainLayout>
+    );
+  }
+
   return (
-    <MainLayout>
-      <div className="space-y-5" style={{ paddingBottom: "5rem" }}>
-        {/* ── Header ──────────────────────────────────── */}
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <h1 className="text-2xl font-bold" style={{ color: "#1B4332" }}>
-            🕋 Umrah Steps
-          </h1>
-          <p className="text-sm mt-1" style={{ color: "#6B7280" }}>
-            Follow each step in order for your Umrah
-          </p>
-        </motion.div>
-
-        {/* ── Progress summary card ────────────────────── */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="rounded-2xl p-5 shadow-sm"
-          style={{
-            background: "linear-gradient(135deg, #1B4332 0%, #40916C 100%)",
-          }}
-        >
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <p className="text-green-200 text-xs font-medium">
-                OVERALL PROGRESS
-              </p>
-              <p className="text-white font-bold text-2xl mt-0.5">
-                {percentage}% Complete
-              </p>
-            </div>
-            <div
-              className="w-16 h-16 rounded-2xl flex flex-col
-                         items-center justify-center"
-              style={{ backgroundColor: "rgba(255,255,255,0.15)" }}
-            >
-              <span className="text-white font-black text-xl leading-none">
-                {completed}
-              </span>
-              <span className="text-green-200 text-xs">of {total}</span>
-            </div>
-          </div>
-
-          {/* Progress bar */}
-          <div
-            className="h-2 rounded-full overflow-hidden"
-            style={{ backgroundColor: "rgba(255,255,255,0.2)" }}
+    <PageTransition>
+      <MainLayout>
+        <div className="space-y-5" style={{ paddingBottom: "5rem" }}>
+          {/* ── Header ──────────────────────────────────── */}
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
           >
-            <motion.div
-              className="h-full rounded-full"
-              style={{ backgroundColor: "#D4A017" }}
-              initial={{ width: 0 }}
-              animate={{ width: `${percentage}%` }}
-              transition={{ duration: 0.8, ease: "easeOut" }}
-            />
-          </div>
+            <h1 className="text-2xl font-bold" style={{ color: "#1B4332" }}>
+              🕋 Umrah Steps
+            </h1>
+            <p className="text-sm mt-1" style={{ color: "#6B7280" }}>
+              Follow each step in order for your Umrah
+            </p>
+          </motion.div>
 
-          <p className="text-green-200 text-xs mt-2">
-            {total - completed === 0
-              ? "🎉 All steps completed! May Allah accept your Umrah."
-              : `${total - completed} step${
-                  total - completed !== 1 ? "s" : ""
-                } remaining`}
-          </p>
-        </motion.div>
-
-        {/* ── All done celebration ─────────────────────── */}
-        <AnimatePresence>
-          {allDone && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="rounded-2xl p-5 text-center"
-              style={{
-                background: "linear-gradient(135deg, #FFF8E7, #FFFBF0)",
-                border: "1px solid rgba(212,160,23,0.3)",
-              }}
-            >
-              <div className="text-4xl mb-2">🤲</div>
-              <p className="font-bold text-base" style={{ color: "#92400E" }}>
-                Taqabbalallahu Minna Wa Minkum
-              </p>
-              <p className="text-sm mt-1" style={{ color: "#78350F" }}>
-                May Allah accept your Umrah. Ameen!
-              </p>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* ── Checklist items ──────────────────────────── */}
-        {loading ? (
-          // Loading skeletons
-          <div className="space-y-3">
-            {[...Array(5)].map((_, i) => (
+          {/* ── Progress summary card ────────────────────── */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="rounded-2xl p-5 shadow-sm"
+            style={{
+              background: "linear-gradient(135deg, #1B4332 0%, #40916C 100%)",
+            }}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <p className="text-green-200 text-xs font-medium">
+                  OVERALL PROGRESS
+                </p>
+                <p className="text-white font-bold text-2xl mt-0.5">
+                  {percentage}% Complete
+                </p>
+              </div>
               <div
-                key={i}
-                className="h-20 rounded-2xl animate-pulse"
-                style={{ backgroundColor: "#E5E7EB" }}
+                className="w-16 h-16 rounded-2xl flex flex-col
+                           items-center justify-center"
+                style={{ backgroundColor: "rgba(255,255,255,0.15)" }}
+              >
+                <span className="text-white font-black text-xl leading-none">
+                  {completed}
+                </span>
+                <span className="text-green-200 text-xs">of {total}</span>
+              </div>
+            </div>
+
+            <div
+              className="h-2 rounded-full overflow-hidden"
+              style={{ backgroundColor: "rgba(255,255,255,0.2)" }}
+            >
+              <motion.div
+                className="h-full rounded-full"
+                style={{ backgroundColor: "#D4A017" }}
+                initial={{ width: 0 }}
+                animate={{ width: `${percentage}%` }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
               />
-            ))}
-          </div>
-        ) : (
+            </div>
+
+            <p className="text-green-200 text-xs mt-2">
+              {total - completed === 0
+                ? "🎉 All steps completed! May Allah accept your Umrah."
+                : `${total - completed} step${
+                    total - completed !== 1 ? "s" : ""
+                  } remaining`}
+            </p>
+          </motion.div>
+
+          {/* ── All done celebration ─────────────────────── */}
+          <AnimatePresence>
+            {allDone && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="rounded-2xl p-5 text-center"
+                style={{
+                  background: "linear-gradient(135deg, #FFF8E7, #FFFBF0)",
+                  border: "1px solid rgba(212,160,23,0.3)",
+                }}
+              >
+                <div className="text-4xl mb-2">🤲</div>
+                <p className="font-bold text-base" style={{ color: "#92400E" }}>
+                  Taqabbalallahu Minna Wa Minkum
+                </p>
+                <p className="text-sm mt-1" style={{ color: "#78350F" }}>
+                  May Allah accept your Umrah. Ameen!
+                </p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* ── Checklist items ──────────────────────────── */}
           <div className="space-y-3">
             {items.map((item, index) => (
               <ChecklistItem
@@ -288,10 +283,8 @@ const UmrahChecklist = () => {
               />
             ))}
           </div>
-        )}
 
-        {/* ── Reset button ─────────────────────────────── */}
-        {!loading && (
+          {/* ── Reset button ─────────────────────────────── */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -312,9 +305,9 @@ const UmrahChecklist = () => {
               {resetting ? "Resetting..." : "↺ Reset Checklist"}
             </button>
           </motion.div>
-        )}
-      </div>
-    </MainLayout>
+        </div>
+      </MainLayout>
+    </PageTransition>
   );
 };
 
