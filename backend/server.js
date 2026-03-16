@@ -6,6 +6,7 @@ import connectDB from "./config/db.js";
 // Import routes
 import authRoutes from "./routes/authRoutes.js";
 import checklistRoutes from "./routes/checklistRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
 
 dotenv.config();
 connectDB();
@@ -34,6 +35,7 @@ app.get("/api/health", (req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/checklist", checklistRoutes);
+app.use("/api/user", userRoutes);
 
 // ─── 404 handler ──────────────────────────────────────────
 app.use((req, res) => {
