@@ -7,6 +7,7 @@ import {
   togglePackingItem,
   getPackingProgress,
   resetUmrahChecklist,
+  resetPackingChecklist,
 } from "../controllers/checklistController.js";
 import protect from "../middleware/authMiddleware.js";
 
@@ -25,5 +26,6 @@ router.delete("/umrah/reset", resetUmrahChecklist);
 router.get("/packing", getPackingChecklist);
 router.get("/packing/progress", getPackingProgress);
 router.patch("/packing/:itemId", togglePackingItem);
+router.delete("/packing/reset", resetPackingChecklist);
 
 export default router;

@@ -1,6 +1,5 @@
 import mongoose from "mongoose";
 
-// ── Single checklist item schema ───────────────────────────
 const checklistItemSchema = new mongoose.Schema({
   id: {
     type: String,
@@ -14,6 +13,10 @@ const checklistItemSchema = new mongoose.Schema({
     type: String,
     default: "",
   },
+  category: {
+    type: String,
+    default: "",
+  },
   completed: {
     type: Boolean,
     default: false,
@@ -24,20 +27,15 @@ const checklistItemSchema = new mongoose.Schema({
   },
 });
 
-// ── Main checklist schema ──────────────────────────────────
 const checklistSchema = new mongoose.Schema(
   {
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
-      unique: true, // One checklist document per user
+      unique: true,
     },
-
-    // Umrah steps checklist
     umrahItems: [checklistItemSchema],
-
-    // Packing checklist
     packingItems: [checklistItemSchema],
   },
   {
